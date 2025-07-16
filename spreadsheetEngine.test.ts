@@ -97,6 +97,17 @@ describe('Spreadsheet', () => {
         expect(sheet.getRaw('B1')).toBe('=A1 + 5');
     });
 
+    test('updates dependent cells', () => {
+        sheet.set('A1', '10');
+        sheet.set('B1', '=A1 + 5');
+        expect(sheet.get('B1')).toBe(15);
+        expect(sheet.getRaw('B1')).toBe('=A1 + 5');
+
+        sheet.set('A1', '=B1');
+        expect(sheet.get('B1')).toBe('CIRCULAR');
+        expect(sheet.get('A1')).toBe('CIRCULAR');
+    });
+
     test('handles syntax errors in formulas', () => {
         sheet.set('A1', '=A1 + AAA');
         expect(sheet.get('A1')).toBe('!SYNTAX');
