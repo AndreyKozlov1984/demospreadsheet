@@ -202,4 +202,18 @@ export class Spreadsheet {
 
         return result;
     }
+
+    // Export as array of original user input (to make into localStorage)
+    exportAsRawArray(): (string)[][] {
+        const result: (string )[][] =
+            Array.from({ length: this.maxRows }, () => Array(this.maxCols).fill(''));
+
+        for (let row = 1; row <= this.maxRows; row++) {
+            for (let col = 0; col < this.maxCols; col++) {
+                const cell = String.fromCharCode(65 + col) + row;
+                result[row - 1][col] = this.getRaw(cell);
+            }
+        }
+        return result;
+    }
 }
