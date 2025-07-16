@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Spreadsheet } from './spreadsheetEngine';
@@ -11,10 +12,44 @@ const SpreadsheetApp: React.FC = () => {
         Array.from({ length: 5 }, () => Array(10).fill(''))
     );
 
-    // Update grid when spreadsheet changes
+    // Load from localStorage on mount
+    React.useEffect(() => {
+        const savedData = localStorage.getItem('spreadsheet');
+        if (savedData) {
+            try {
+                const rawArray: string[][] = JSON.parse(savedData);
+                if (Array.isArray(rawArray) && rawArray.length === 5 && rawArray.every(row => Array.isArray(row) && row.length === 10)) {
+                    rawArray.forEach((row, rowIndex) => {
+                        row.forEach((value, colIndex) => {
+                            if (value !== '') {
+                                const cell = `${String.fromCharCode(65 + colIndex)}${rowIndex + 1}`;
+                                try {
+                                    spreadsheet.set(cell, value);
+                                } catch (err) {
+                                    console.error(`Failed to load cell ${cell}:`, err);
+                                }
+                            }
+                        });
+                    });
+                    setGrid(spreadsheet.exportAsArray());
+                }
+            } catch (err) {
+                console.error('Failed to load from localStorage:', err);
+            }
+        }
+    }, [spreadsheet]);
+
+    // Update grid and save to localStorage
     const updateGrid = React.useCallback(() => {
         const newGrid = spreadsheet.exportAsArray();
         setGrid(newGrid);
+        // Save to localStorage
+        try {
+            const rawArray = spreadsheet.exportAsRawArray();
+            localStorage.setItem('spreadsheet', JSON.stringify(rawArray));
+        } catch (err) {
+            console.error('Failed to save to localStorage:', err);
+        }
     }, [spreadsheet]);
 
     // Handle cell click to select and show input
@@ -85,8 +120,8 @@ const SpreadsheetApp: React.FC = () => {
                                         />
                                     ) : (
                                         <span className="truncate">
-                                            {value === '!SYNTAX' ? '#SYNTAX' : 
-                                             value === 'CIRCULAR' ? '#CIRCULAR' : 
+                                            {value === '!SYNTAX' ? '#SYNTAX' :
+                                             value === 'CIRCULAR' ? '#CIRCULAR' :
                                              value}
                                         </span>
                                     )}

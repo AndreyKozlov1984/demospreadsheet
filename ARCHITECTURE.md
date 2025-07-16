@@ -9,3 +9,6 @@ get give a value of any cell, and set allows to set a value of any cell
 
 We store a list of dependencies for every cell, still yet if we update any cell
 it easier to exportAsArray whole spreadsheet than to get a list of all dependencies (next step)
+
+UI PArt - simple react app, nothing special
+puppeteer test - a very primitive test, in future would use data-id="J1" instead of number of the cell
