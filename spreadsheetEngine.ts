@@ -20,15 +20,11 @@ export class Spreadsheet {
     // Set a cell's value or formula (only strings allowed)
     set(cell: string, value: string): void {
         if (typeof value !== 'string') {
-            this.cells.set(cell, '!SYNTAX');
-            this.rawValues.set(cell, String(value));
-            return;
+            throw new Error('Value must be a string');
         }
 
         if (!this.isValidCell(cell)) {
-            this.cells.set(cell, '!SYNTAX');
-            this.rawValues.set(cell, value);
-            return;
+            throw new Error('Invalid cell reference');
         }
 
         this.dependencies.delete(cell);

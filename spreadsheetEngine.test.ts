@@ -1,3 +1,4 @@
+
 import { Spreadsheet } from './spreadsheetEngine';
 
 describe('Spreadsheet', () => {
@@ -34,23 +35,35 @@ describe('Spreadsheet', () => {
     });
 
     test('handles non-string inputs', () => {
-        sheet.set('A1', 42 as any);
-        expect(sheet.get('A1')).toBe('!SYNTAX');
-        expect(sheet.getRaw('A1')).toBe('42');
-
-        sheet.set('B1', null as any);
-        expect(sheet.get('B1')).toBe('!SYNTAX');
-        expect(sheet.getRaw('B1')).toBe('null');
+        expect(() => sheet.set('A1', 42 as any)).toThrow('Value must be a string');
+        expect(() => sheet.set('B1', null as any)).toThrow('Value must be a string');
     });
 
     test('handles invalid cell references', () => {
-        sheet.set('K1', '10');
-        expect(sheet.get('K1')).toBe('!SYNTAX');
-        expect(sheet.getRaw('K1')).toBe('10');
+        expect(() => sheet.set('K1', '10')).toThrow('Invalid cell reference');
+        expect(() => sheet.set('A6', '10')).toThrow('Invalid cell reference');
+        expect(() => sheet.set('Z999', '5')).toThrow('Invalid cell reference');
 
-        sheet.set('A6', '10');
+        expect(sheet.get('K1')).toBe('!SYNTAX');
+        expect(sheet.getRaw('K1')).toBe('');
         expect(sheet.get('A6')).toBe('!SYNTAX');
-        expect(sheet.getRaw('A6')).toBe('10');
+        expect(sheet.getRaw('A6')).toBe('');
+        expect(sheet.get('Z999')).toBe('!SYNTAX');
+        expect(sheet.getRaw('Z999')).toBe('');
+    });
+
+    test('handles formulas with invalid cell references', () => {
+        sheet.set('A1', '=Z999 + 5');
+        expect(sheet.get('A1')).toBe('!SYNTAX');
+        expect(sheet.getRaw('A1')).toBe('=Z999 + 5');
+
+        sheet.set('B1', '=K1 + 10');
+        expect(sheet.get('B1')).toBe('!SYNTAX');
+        expect(sheet.getRaw('B1')).toBe('=K1 + 10');
+
+        sheet.set('C1', '=A6');
+        expect(sheet.get('C1')).toBe('!SYNTAX');
+        expect(sheet.getRaw('C1')).toBe('=A6');
     });
 
     test('evaluates simple formulas', () => {
@@ -85,9 +98,13 @@ describe('Spreadsheet', () => {
     });
 
     test('handles syntax errors in formulas', () => {
-        sheet.set('A1', '=A1 + K1');
+        sheet.set('A1', '=A1 + AAA');
         expect(sheet.get('A1')).toBe('!SYNTAX');
-        expect(sheet.getRaw('A1')).toBe('=A1 + K1');
+        expect(sheet.getRaw('A1')).toBe('=A1 + AAA');
+
+        sheet.set('B1', '=A1 * 5');
+        expect(sheet.get('B1')).toBe('!SYNTAX');
+        expect(sheet.getRaw('B1')).toBe('=A1 * 5');
     });
 
     test('exports as array correctly', () => {
